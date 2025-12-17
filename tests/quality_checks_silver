@@ -1,0 +1,77 @@
+-- Check for duplicates or NULLs in primary key
+SELECT 
+    cst_id,
+    COUNT(*) AS cnt
+FROM silver.crm_cust_info
+GROUP BY cst_id
+HAVING COUNT(*) > 1 OR cst_id IS NULL;
+
+-- Check for unwanted spaces in key columns
+SELECT 
+    cst_key 
+FROM silver.crm_cust_info
+WHERE cst_key <> TRIM(cst_key);
+
+-- Check distinct values for low-cardinality columns
+SELECT DISTINCT 
+    cst_marital_status 
+FROM silver.crm_cust_info;
+-- Check for duplicates or NULLs in primary key
+SELECT 
+    prd_id,
+    COUNT(*) AS cnt
+FROM silver.crm_prd_info
+GROUP BY prd_id
+HAVING COUNT(*) > 1 OR prd_id IS NULL;
+
+-- Check for unwanted spaces in product name
+SELECT 
+    prd_nm 
+FROM silver.crm_prd_info
+WHERE prd_nm <> TRIM(prd_nm);
+
+-- Check for invalid or negative cost
+SELECT 
+    prd_cost 
+FROM silver.crm_prd_info
+WHERE prd_cost < 0 OR prd_cost IS NULL;
+
+-- Check distinct product lines
+SELECT DISTINCT 
+    prd_line 
+FROM silver.crm_prd_info;
+
+-- Check invalid date ranges
+SELECT * 
+FROM silver.crm_prd_info
+WHERE prd_end_dt < prd_start_dt;
+-- Check for invalid due dates
+SELECT 
+    NULLIF(sls_due_dt, 0) AS sls_due_dt 
+FROM bronze.crm_sales_details
+WHERE sls_due_dt <= 0 
+    OR LEN(sls_due_dt) != 8 
+    OR sls_due_dt > 20500101 
+    OR sls_due_dt < 19000101;
+
+-- Check order vs ship vs due dates
+SELECT * 
+FROM silver.crm_sales_details
+WHERE sls_order_dt > sls_ship_dt 
+   OR sls_order_dt > sls_due_dt;
+-- Check for unrealistic birth dates
+SELECT DISTINCT 
+    bdate 
+FROM silver.erp_cust_az12
+WHERE bdate < '1924-01-01' 
+   OR bdate > GETDATE();
+
+-- Check distinct gender values
+SELECT DISTINCT 
+    gen 
+FROM silver.erp_cust_az12;
+
+SELECT DISTINCT 
+    cntry 
+FROM silver.erp_loc_a101
+ORDER BY cntry;
